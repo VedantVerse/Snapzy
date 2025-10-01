@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ISO — Chat</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+body, html {
+  margin:0; padding:0; height:100%;
+  font-family: Inter, sans-serif;
+  background: none; color:white;
+  overflow:scroll;
+}
+
+canvas#bgCanvas {
+  position: fixed;
+  top:0; left:0; width:100%; height:100%;
+  z-index:-1;
+}
+
+/* Topbar */
+header.topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 20px;
+  background: rgba(15,15,23,0.85);
+  backdrop-filter: blur(10px);
+  position:relative; z-index:2;
+}
+
+header.topbar button{
+  padding:8px 12px; border-radius:12px; border:none; font-weight:700;
+  cursor:pointer; margin:0 5px; transition:0.2s all;
+}
+header.topbar button:hover{ transform:translateY(-2px); }
+
+/* Gradient ISO text */
+#chatTitle{
+  font-size:28px; font-weight:900;
+  background: linear-gradient(270deg, #a64dff, #ff6ec7, #7c4dff, #a64dff);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;  /* standard */
+  animation: gradientShift 6s ease infinite;
+  text-shadow:0 0 15px rgba(166,77,255,0.6);
+}
+@keyframes gradientShift{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Layout */
+main.container.single-col{
+  display:flex; flex-direction:column; height:calc(100% - 60px);
+}
+
+/* Chat window */
+.chat-window{
+  flex:1;
+  display:flex; flex-direction:column;
+  padding:15px;
+  overflow-y:auto;
+}
+
+.message{
+  padding:10px 15px;
+  border-radius:18px;
+  margin:5px 0;
+  max-width:75%;
+  word-wrap:break-word;
+  position:relative;
+}
+
+.message.user{
+  background: linear-gradient(90deg,#a64dff,#7c4dff);
+  align-self:flex-end;
+  color:white;
+  box-shadow:0 0 10px rgba(166,77,255,0.4);
+}
+
+.message.friend{
+  background: rgba(255,255,255,0.1);
+  align-self:flex-start;
+  color:white;
+}
+
+.message .time{
+  font-size:10px;
+  color: rgba(255,255,255,0.5);
+  position:absolute;
+  bottom:-12px;
+  right:10px;
+}
+
+/* Wrapper to contain the input and animated border */
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(15,15,23,0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  position: relative;
+}
+
+/* Input field */
+#messageInput {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: none;
+  outline: none;
+  background: rgba(0,0,0,0.3);
+  color: white;
+  font-size: 16px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Animated neon border behind input */
+#messageInput::before {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border-radius: 25px;
+  z-index: 1;
+  background: conic-gradient(
+    #ff6ec7, #a64dff, #7c4dff, #ff6ec7, #a64dff
+  );
+  animation: rotateBorder 4s linear infinite;
+}
+
+/* Add a wrapper pseudo-element for mask effect (clips input above the border) */
+#messageInput-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+#messageInput-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border-radius: 25px;
+  z-index: 1;
+  background: conic-gradient(#ff6ec7,#a64dff,#7c4dff,#ff6ec7,#a64dff);
+  animation: rotateBorder 4s linear infinite;
+}
+
+/* Placeholder text */
+#messageInput::placeholder {
+  color: rgba(255,255,255,0.5);
+  font-style: normal;
+}
+
+/* Send button */
+#sendBtn {
+  padding: 12px 25px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(90deg, #a64dff, #ff6ec7);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#sendBtn:hover{
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(90deg, #ff6ec7, #a64dff);
+}
+
+/* Keyframes for rotating gradient border */
+@keyframes rotateBorder {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+/* Scrollbar styling */
+.chat-window::-webkit-scrollbar{
+  width:6px;
+}
+.chat-window::-webkit-scrollbar-thumb{
+  background: rgba(166,77,255,0.5); border-radius:3px;
+}
+
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<header class="topbar">
+  <button id="backBtn" class="alt">←</button>
+  <div id="chatTitle">Chat</div>
+  <div class="right">
+    <button id="profileBtn">Profile</button>
+  </div>
+</header>
+
+<main class="container single-col">
+  <section class="main card chat-window" id="chatWindow"></section>
+
+  <section class="composer card">
+    <input id="messageInput" placeholder="Type a message..." />
+    <button id="sendBtn">Send</button>
+  </section>
+</main>
+
+<script>
+// STARFIELD background
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; });
+let stars=[];
+for(let i=0;i<150;i++) stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.5+0.5,alpha:Math.random(),delta:Math.random()*0.02+0.01});
+function animate(){ ctx.fillStyle='black'; ctx.fillRect(0,0,w,h);
+  for(let s of stars){ ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,255,${s.alpha})`; ctx.fill(); s.alpha+=s.delta; if(s.alpha<=0){s.alpha=0;s.delta*=-1;} if(s.alpha>=1){s.alpha=1;s.delta*=-1;} }
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Get contact name from URL
+const params = new URLSearchParams(window.location.search);
+const contactName = params.get('contact') || 'Unknown';
+document.getElementById('chatTitle').textContent = contactName;
+
+// Chat logic
+const chatWindow = document.getElementById('chatWindow');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+
+let messages = JSON.parse(localStorage.getItem(contactName)) || [];
+
+function addMessage(text,type){
+  const msg = document.createElement('div');
+  msg.className = 'message '+type;
+  msg.textContent = text;
+  const time = document.createElement('div');
+  time.className='time';
+  const now = new Date();
+  time.textContent = now.getHours()+':'+now.getMinutes().toString().padStart(2,'0');
+  msg.appendChild(time);
+  chatWindow.appendChild(msg);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// Render messages
+messages.forEach(m=>addMessage(m.text,m.type));
+
+// Send message
+sendBtn.addEventListener('click', ()=>{
+  const text = messageInput.value.trim();
+  if(!text) return;
+  addMessage(text,'user');
+  messages.push({text,type:'user'});
+  localStorage.setItem(contactName, JSON.stringify(messages));
+  messageInput.value='';
+});
+
+messageInput.addEventListener('keypress',(e)=>{
+  if(e.key==='Enter') sendBtn.click();
+});
+
+// Back button
+document.getElementById('backBtn').addEventListener('click',()=>{
+  window.location='chats.html';
+});
+let shootingStars = [];
+function addShootingStar() {
+  shootingStars.push({
+    x: Math.random()*w, y: 0,
+    vx: Math.random()*2-1, vy: Math.random()*4+2,
+    length: Math.random()*80+30
+  });
+}
+setInterval(addShootingStar, 3000);
+
+function drawShootingStars() {
+  for(let i=shootingStars.length-1;i>=0;i--){
+    let s=shootingStars[i];
+    ctx.beginPath();
+    ctx.moveTo(s.x,s.y);
+    ctx.lineTo(s.x-s.vx*s.length,s.y-s.vy*s.length);
+    ctx.strokeStyle='rgba(255,255,255,0.8)';
+    ctx.stroke();
+    s.x+=s.vx; s.y+=s.vy;
+    if(s.y>h) shootingStars.splice(i,1);
+  }
+}
+
+</script>
+</body>
+</html>

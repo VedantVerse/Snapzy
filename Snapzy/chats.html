@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ISO — Chats</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body, html {
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family: Inter, system-ui, sans-serif;
+    background:none;
+    color:white;
+    overflow:hidden;
+  }
+
+  canvas#bgCanvas {
+    position: fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+  }
+
+  /* Topbar */
+  header.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 20px;
+    background: none;
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index:2;
+  }
+
+  .brand{
+    font-size:28px;
+    font-weight:900;
+    background: linear-gradient(270deg, #48ff00, #ff6ec7, #4400ff, #ff0000);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 6s ease infinite;
+    text-shadow:0 0 15px rgba(166,77,255,0.6);
+  }
+
+  @keyframes gradientShift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+
+  header.topbar .right button{
+    padding:8px 15px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    cursor:pointer;
+    margin-left:10px;
+    transition: transform 0.2s;
+  }
+  header.topbar .right button:hover{ transform:translateY(-2px); }
+
+  #settings{
+    background: linear-gradient(90deg,#a64dff,#7c4dff);
+    color:white;
+  }
+
+  #logoutBtn.alt{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.5);
+    color:white;
+  }
+  #openProfile{
+    background: linear-gradient(90deg,#a64dff,#7c4dff);
+    color:white;
+  }
+
+  /* Layout */
+  main.container{
+    display:flex;
+    height:calc(100% - 60px);
+  }
+
+  aside.sidebar{
+    width:280px;
+    background: none;
+    backdrop-filter: blur(10px);
+    display:flex;
+    flex-direction:column;
+    padding:15px;
+  }
+
+  aside.sidebar .search input{
+    width:100%;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.3);
+    outline:none;
+    background: rgba(0,0,0,0.3);
+    color:white;
+  }
+
+  .contacts{
+    margin-top:15px;
+    flex:1;
+    overflow-y:auto;
+  }
+
+  .contact-item{
+    padding:10px 12px;
+    border-radius:12px;
+    margin-bottom:8px;
+    cursor:pointer;
+    transition: background 0.2s;
+  }
+  .contact-item:hover{
+    background: rgba(103, 61, 255, 0.384);
+  }
+
+  .contact-name{
+    font-weight:700;
+    font-size:16px;
+  }
+  .contact-last{
+    font-size:13px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* Main section */
+  section.main{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:20px;
+  }
+  section.main h3{
+    font-size:24px;
+    margin-bottom:10px;
+  }
+  section.main p{
+    color: rgba(255,255,255,0.6);
+  }
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<header class="topbar">
+  <div class="brand">ISO</div>
+  <div class="right">
+    <button id="settings">Settings</button>
+    <button id="openProfile">Profile</button>
+    <button id="logoutBtn" class="alt">Logout</button>
+  </div>
+</header>
+
+<main class="container two-col">
+  <aside class="sidebar card">
+    <div class="search">
+      <input id="searchFriend" placeholder="Search contacts..." autocomplete="off"/>
+    </div>
+    <div id="contactsList" class="contacts"></div>
+    <div class="small muted center">Tip: click a contact to open chat</div>
+  </aside>
+
+  <section class="main card" id="emptyState">
+    <div class="center padded">
+      <h3>Select a chat or start a new conversation</h3>
+      <p class="muted">You can create contacts and messages will be stored locally.</p>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script>
+// Galaxy background with shooting stars
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', ()=>{
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+});
+
+// Stars
+let stars = [];
+for(let i=0;i<200;i++){
+  stars.push({
+    x: Math.random()*w,
+    y: Math.random()*h,
+    r: Math.random()*1.5+0.5,
+    alpha: Math.random(),
+    delta: Math.random()*0.02+0.01
+  });
+}
+
+// Shooting stars
+let shooting = [];
+function newShootingStar(){
+  shooting.push({
+    x: Math.random()*w,
+    y: Math.random()*h/2,
+    len: Math.random()*80+50,
+    speed: Math.random()*4+3,
+    alpha: 1
+  });
+}
+setInterval(newShootingStar, 2500);
+
+function animate(){
+  // Gradient background
+  const gradient = ctx.createLinearGradient(0,0,w,h);
+  gradient.addColorStop(0,'#0f2027');
+  gradient.addColorStop(0.5,'#203a43');
+  gradient.addColorStop(1,'#2c5364');
+  ctx.fillStyle=gradient;
+  ctx.fillRect(0,0,w,h);
+
+  // Stars twinkle
+  for(let s of stars){
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+    ctx.fill();
+
+    s.alpha += s.delta;
+    if(s.alpha <= 0){ s.alpha = 0; s.delta *= -1; }
+    if(s.alpha >= 1){ s.alpha = 1; s.delta *= -1; }
+  }
+
+  // Shooting stars
+  for(let i=shooting.length-1;i>=0;i--){
+    const sh = shooting[i];
+    ctx.strokeStyle=`rgba(255,255,255,${sh.alpha})`;
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(sh.x,sh.y);
+    ctx.lineTo(sh.x-sh.len,sh.y+sh.len/3);
+    ctx.stroke();
+
+    sh.x+=-sh.speed;
+    sh.y+=sh.speed/3;
+    sh.alpha-=0.01;
+    if(sh.alpha<=0) shooting.splice(i,1);
+  }
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Demo contacts
+const contacts = [
+  {name:'David', last:'Hey, how are you?'},
+  {name:'Parkour', last:'See you soon!'},
+  {name:'DJ Snake', last:'Check this out!'},
+  {name:'Big Smoke', last:'Can we talk?'},
+];
+
+const contactsList = document.getElementById('contactsList');
+
+function renderContacts(){
+  contactsList.innerHTML='';
+  contacts.forEach(c=>{
+    const div = document.createElement('div');
+    div.className='contact-item';
+
+    // Pass contact name in URL
+    div.onclick = ()=>{ window.location='chat.html?contact='+encodeURIComponent(c.name); };
+
+    const name = document.createElement('div');
+    name.className='contact-name';
+    name.textContent = c.name;
+
+    const last = document.createElement('div');
+    last.className='contact-last';
+    last.textContent = c.last;
+
+    div.appendChild(name);
+    div.appendChild(last);
+    contactsList.appendChild(div);
+  });
+}
+
+
+renderContacts();
+</script>
+</body>
+</html>

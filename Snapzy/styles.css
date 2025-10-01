@@ -1,0 +1,86 @@
+:root{
+  --bg:#0f0f12; --card:#111217; --muted:#9aa0a6; --accent:#7c4dff;
+  --glass: rgba(255,255,255,0.03);
+  color-scheme: dark;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#07070a 0%, #0f1020 100%); color:#e6e6e6; min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);backdrop-filter:blur(6px)}
+.brand{font-weight:800;font-size:20px;color:var(--accent)}
+.container{max-width:1000px;margin:18px auto;padding:0 12px;display:flex;gap:12px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.center-wrap{display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.auth-card{width:320px;text-align:center}
+.auth-card input{width:100%;padding:10px;border-radius:8px;margin:10px 0;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+.row{display:flex;gap:8px}
+button{background:linear-gradient(90deg,var(--accent),#5b32ff);border:none;padding:10px 12px;border-radius:10px;color:white;cursor:pointer;box-shadow:0 8px 18px rgba(124,77,255,0.12);transition:transform .12s}
+button.alt{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+button:hover{transform:translateY(-3px)}
+.muted{color:var(--muted);font-size:13px}
+.small{font-size:13px}
+.two-col .sidebar{width:320px;display:flex;flex-direction:column;gap:8px}
+.two-col .main{flex:1;min-height:420px;display:flex;align-items:center;justify-content:center}
+.search input{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:var(--glass);color:inherit}
+.contacts .contact{display:flex;gap:12px;padding:8px;border-radius:8px;align-items:center;cursor:pointer}
+.contacts .contact:hover{background:rgba(255,255,255,0.02)}
+.contact .avatar{width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#2b2b35,#1b1b20);display:flex;align-items:center;justify-content:center}
+.contact .meta{flex:1}
+.chat-window{min-height:420px;display:flex;flex-direction:column;gap:8px;overflow:auto;padding:12px}
+.msg{max-width:70%;padding:10px;border-radius:12px}
+.msg.me{align-self:flex-end;background:linear-gradient(90deg,var(--accent),#5b32ff);color:white}
+.msg.you{align-self:flex-start;background:rgba(255,255,255,0.03);color:inherit}
+.composer{display:flex;gap:8px;align-items:center;margin-top:8px}
+.composer input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+.profile .avatar{width:96px;height:96px;border-radius:16px;font-size:36px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.center{display:flex;align-items:center;justify-content:center}
+.padded{padding:20px}
+@media(max-width:800px){
+  .container{flex-direction:column}
+  .two-col .sidebar{width:100%}
+}
+/* Mobile chat layout fixes */
+@media(max-width:600px){
+  html, body {
+    height: 100%;
+    overflow: hidden; /* keep background in place */
+  }
+
+  main.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* full screen */
+    padding: 0 10px;
+  }
+
+  .chat-window {
+    flex: 1;                /* take remaining space */
+    min-height: 0;          /* override min-height */
+    overflow-y: auto;       /* enable vertical scroll */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .composer {
+    flex-shrink: 0;         /* do not shrink */
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 0;
+    background: linear-gradient(180deg, #0f0f12, #111217);
+    gap: 6px;
+  }
+
+  .composer input {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+
+  #sendBtn {
+    padding: 12px 18px;
+    font-size: 16px;
+  }
+}
+
